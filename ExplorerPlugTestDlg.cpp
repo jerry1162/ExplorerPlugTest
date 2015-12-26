@@ -18,12 +18,14 @@
 
 TCHAR g_szPath[MAX_PATH];
 TCHAR g_szItem[MAX_PATH];
+int g_pItemCount;
 
 void CALLBACK RecalcText (HWND hwnd, UINT, UINT_PTR, DWORD)
 {
 	HWND hwndFind = GetForegroundWindow ();
 	g_szPath[0] = TEXT ('/0');
 	g_szItem[0] = TEXT ('/0');
+	g_pItemCount = 0;
 
 	IShellWindows *psw;
 	if (SUCCEEDED (CoCreateInstance (CLSID_ShellWindows, NULL, CLSCTX_ALL,
@@ -49,6 +51,12 @@ void CALLBACK RecalcText (HWND hwnd, UINT, UINT_PTR, DWORD)
 								IFolderView *pfv;
 								if (SUCCEEDED (psv->QueryInterface (IID_IFolderView,
 									(void**) &pfv))) {
+									int* Focus=&g_pItemCount;
+									if (SUCCEEDED (pfv->ItemCount (SVGIO_SELECTION, Focus)))
+									{
+										g_pItemCount = *Focus;
+									}
+									
 									IPersistFolder2 *ppf2;
 									if (SUCCEEDED (pfv->GetFolder (IID_IPersistFolder2,
 										(void**) &ppf2))) {
@@ -226,11 +234,14 @@ void CExplorerPlugTestDlg::OnPaint()
 	{
 		CDialogEx::OnPaint();
 
+		CString s;
+		s.Format (_T("Ñ¡ÖÐÏî:%d"), g_pItemCount);
 		HDC hdc;
 		hdc = ::GetDC (m_hWnd);
 		::SetBkMode (hdc, TRANSPARENT);
 		TextOut (hdc, 0, 0, g_szPath, lstrlen (g_szPath));
 		TextOut (hdc, 0, 20, g_szItem, lstrlen (g_szItem));
+		TextOut (hdc, 0, 40,s.GetString (),s.GetLength ());
 		::ReleaseDC (m_hWnd,hdc);
 	}
 }
